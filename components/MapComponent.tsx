@@ -2,9 +2,10 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-geosearch/dist/geosearch.css";
 import L from "leaflet";
-import { database, ref, onValue } from "@/firebase/firebase";
-import socket from "@/utils/socket";
+import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
+import { addClassName } from "leaflet-geosearch/dist/domUtils.js";
 
 // Define type for GPS location
 interface Location {
@@ -12,84 +13,82 @@ interface Location {
   lng: number;
 }
 
-interface BusLocation {
-  route: string;
-    currentLocation: {
-      latitude: number;
-      longitude: number;
-    },
-    passengers: number,
-    status: string;
-}
-
-// Fix default marker issue in Leaflet
-const busIcon = new L.Icon({
-  iconUrl: "/bus.png",
-  iconSize: [50,80],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const userIcon = new L.Icon({
-  // iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  iconUrl:'/pin.svg',
-  iconSize: [25, 40],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const animatedBusIcon = new L.DivIcon({
-  className: "animated-marker transition-transform animate-bounce",  // Apply animation
-  html: '<img src="/pin.svg" width="50" height="80"/>',
-  iconSize: [50, 80],
-  iconAnchor: [25, 80],
-});
-
-// Component to update the map center dynamically
-const CenterMap: React.FC<{ location: Location }> = ({ location }) => {
+// Custom component to integrate GeoSearchControl
+const SearchControl: React.FC = () => {
   const map = useMap();
+
   useEffect(() => {
-    map.setView([location.lat, location.lng], map.getZoom(), { animate: true });
-  }, [location, map]);
+    const provider = new OpenStreetMapProvider();
+    const searchControl = GeoSearchControl({
+      provider,
+      style: "bar",
+      showMarker: true,
+      showPopup: true,
+      autoClose: true,
+      retainZoomLevel: true,
+      animateZoom: true,
+      className: "",
+    });
+
+    map.addControl(searchControl);
+    // Apply Tailwind styles dynamically
+    setTimeout(() => {
+      const searchBox = document.querySelector(".leaflet-control-geosearch form") as HTMLElement;
+      console.log(searchBox)
+      if (searchBox) {
+        // console.log(searchBox)
+        searchBox.style.backgroundColor = "#000000"
+        searchBox.classList.add(
+          "bg-black", "text-white", "border", "border-white", "rounded-md", 
+          "px-3", "py-2", "shadow-lg"
+        );
+      }
+
+      const searchInput = document.querySelector(".leaflet-control-geosearch input") as HTMLElement;
+      if (searchInput) {
+        searchInput.classList.add("bg-black", "text-white", "placeholder-gray-400", "outline-none");
+      }
+
+      const searchResults = document.querySelector(".leaflet-control-geosearch .results") as HTMLElement;
+      if (searchResults) {
+        searchResults.classList.add("bg-black", "text-white", "border", "border-gray-500", "rounded-md");
+      }
+
+      const resultItems = document.querySelectorAll(".leaflet-control-geosearch .results li");
+      resultItems.forEach((item) => {
+        (item as HTMLElement).classList.add("hover:bg-gray-800", "px-3", "py-2", "cursor-pointer");
+      });
+    }, 500); // Timeout to ensure the elements exist before applying styles
+
+    return () => {
+      map.removeControl(searchControl);
+    };
+  }, [map]);
+
   return null;
 };
 
 const MapComponent: React.FC = () => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
-  const [busLocations, setBusLocations] = useState<BusLocation[]>([]);
 
   useEffect(() => {
-    // Get user location
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        socket.emit("userLocation", { latitude, longitude });
-
         setUserLocation({ lat: latitude, lng: longitude });
       },
-      (err) => console.error(err),
+      (err) => {
+        if(err.code === 1) {
+          alert("Please allow location access to use this feature.");
+        }
+      },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
-
-    // Listen for bus locations from Firebase
-    const busesRef = ref(database, "buses/");
-    const unsubscribe = onValue(busesRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const busArray: BusLocation[] = Object.keys(data).map((busId) => ({
-          id: busId,
-          ...data[busId],
-        }));
-        setBusLocations(busArray);
-      }
-    });
-
-    return () => unsubscribe();
   }, []);
 
   return (
     <MapContainer
-      center={userLocation ? [userLocation.lat, userLocation.lng] : [0, 0]}
+      center={userLocation ? [userLocation.lat, userLocation.lng] : [23.8103, 90.4125]}
       zoom={13}
       style={{ height: "500px", width: "100%" }}
     >
@@ -98,45 +97,13 @@ const MapComponent: React.FC = () => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       />
 
-      {/* Dynamically center the map on the user's location */}
-      {userLocation && <CenterMap location={userLocation} />}
-
-      {/* Render User Location */}
       {userLocation && (
-        <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+        <Marker position={[userLocation.lat, userLocation.lng]} icon={new L.Icon({ iconUrl: "/pin.svg", iconSize: [25, 40] })}>
           <Popup>Your Location</Popup>
         </Marker>
       )}
 
-      {/* Render Multiple Bus Locations */}
-      {busLocations.map((bus) => (
-        <Marker key={bus.route} position={[bus.currentLocation.latitude, bus.currentLocation.longitude]} icon={busIcon}>
-          <Popup>{bus.route}</Popup>
-        </Marker>
-      ))}
-
-      <Marker position={[23.172345,90.3032401]} icon={busIcon} >
-          <Popup><div>
-            <h3>Bus name: {'3 Star 20'}</h3>
-            <p>Route: {'Mirpur<Pallobi>DSC'}</p>
-              <p>Driver Number: 01871755616</p>
-
-              <h1>3 Star || mirpur-sony-dsc</h1>
-              <p>Passengers: {10}</p>
-              <p>Status: {"Running"}</p>
-            </div></Popup>
-      </Marker>
-      <Marker position={[23.172349,90.3032407]} icon={busIcon} >
-          <Popup><div>
-            <h3>Bus name: {'3 Star 20'}</h3>
-            <p>Route: {'Mirpur<Pallobi>DSC'}</p>
-              <p>Driver Number: 01871755616</p>
-
-              <h1>3 Star || mirpur-sony-dsc</h1>
-              <p>Passengers: {10}</p>
-              <p>Status: {"Running"}</p>
-            </div></Popup>
-      </Marker>
+      <SearchControl />
     </MapContainer>
   );
 };
