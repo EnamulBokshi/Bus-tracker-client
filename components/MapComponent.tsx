@@ -32,33 +32,7 @@ const SearchControl: React.FC = () => {
 
     map.addControl(searchControl);
     // Apply Tailwind styles dynamically
-    setTimeout(() => {
-      const searchBox = document.querySelector(".leaflet-control-geosearch form") as HTMLElement;
-      console.log(searchBox)
-      if (searchBox) {
-        // console.log(searchBox)
-        searchBox.style.backgroundColor = "#000000"
-        searchBox.classList.add(
-          "bg-black", "text-white", "border", "border-white", "rounded-md", 
-          "px-3", "py-2", "shadow-lg"
-        );
-      }
-
-      const searchInput = document.querySelector(".leaflet-control-geosearch input") as HTMLElement;
-      if (searchInput) {
-        searchInput.classList.add("bg-black", "text-white", "placeholder-gray-400", "outline-none");
-      }
-
-      const searchResults = document.querySelector(".leaflet-control-geosearch .results") as HTMLElement;
-      if (searchResults) {
-        searchResults.classList.add("bg-black", "text-white", "border", "border-gray-500", "rounded-md");
-      }
-
-      const resultItems = document.querySelectorAll(".leaflet-control-geosearch .results li");
-      resultItems.forEach((item) => {
-        (item as HTMLElement).classList.add("hover:bg-gray-800", "px-3", "py-2", "cursor-pointer");
-      });
-    }, 500); // Timeout to ensure the elements exist before applying styles
+  
 
     return () => {
       map.removeControl(searchControl);
