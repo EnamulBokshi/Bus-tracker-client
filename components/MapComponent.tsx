@@ -8,6 +8,7 @@ import { database, ref, onValue } from "@/firebase/firebase";
 import socket from "@/utils/socket";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import SearchControl from "./MapControl";
+import { error } from "console";
 
 // Define type for GPS location
 interface Location {
@@ -28,7 +29,7 @@ interface BusLocation {
 // Fix default marker issue in Leaflet
 const busIcon = new L.Icon({
   iconUrl: "/bus.png",
-  iconSize:[30,40],
+  iconSize:[40,50],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
 });
@@ -49,11 +50,11 @@ const CenterMap: React.FC<{ location: Location }> = ({ location }) => {
   return null;
 };
 
-// Search Control Component
 
 const MapComponent: React.FC = () => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [busLocations, setBusLocations] = useState<BusLocation[]>([]);
+
 
   useEffect(() => {
     // Get user location
@@ -64,27 +65,64 @@ const MapComponent: React.FC = () => {
 
         setUserLocation({ lat: latitude, lng: longitude });
       },
-      (err) => console.error(err),
+      (err) => {
+        if(err){
+        console.error(err)}
+      },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
 
-    // Listen for bus locations from Firebase
-    const busesRef = ref(database, "buses/");
-    const unsubscribe = onValue(busesRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        console.log("Bus data:", data);
-        const busArray: BusLocation[] = Object.keys(data).map((busId) => ({
-          id: busId,
-          ...data[busId],
-        }));
-        setBusLocations(busArray);
-      }
-    });
+    socket.on("busLocation",(data)=>{
+      console.log("Bus location data:", data);
+      // Update bus locations in state
+      setBusLocations((prevBusLocations) => {
+        const updatedBusLocations = prevBusLocations.map((bus) => {
+          if (bus.route === data.route) {
+            return {
+              ...bus,
+              currentLocation: data.currentLocation,
+            };
+          }
+          return bus;
+        });
+        // Check if the bus is already in the state
+        const busExists = updatedBusLocations.some(bus => bus.route === data.route);
+        if (!busExists) {
+          updatedBusLocations.push({
+            route: data.route,
+            currentLocation: data.currentLocation,
+            passengers: data.passengers,
+            status: data.status,
+          });
+        }
+        return updatedBusLocations;
+      });
+      // const busArray: BusLocation[] = Object.keys(data).map((busId) => ({
+      //   route: busId,
+      //   ...data[busId],
+      // }));
+      // setBusLocations(busArray);
 
-    return () => unsubscribe();
+    })
+
+    // const unsubscribe = onValue(busesRef, (snapshot) => {
+    //   if (snapshot.exists()) {
+    //     const data = snapshot.val();
+    //     console.log("Bus data:", data);
+    //     const busArray: BusLocation[] = Object.keys(data).map((busId) => ({
+    //       id: busId,
+    //       ...data[busId],
+    //     }));
+    //     setBusLocations(busArray);
+    //   }
+    // });
+
+    // return () => unsubscribe();
   }, []);
 
+  // if(busLocations){
+  //   console.log("Bus Locations:", busLocations);
+  // }
   return (
     <MapContainer
       center={userLocation ? [userLocation.lat, userLocation.lng] : [23.8103, 90.4125]} // Default to Dhaka
@@ -108,12 +146,22 @@ const MapComponent: React.FC = () => {
 
       {/* Render Multiple Bus Locations */}
       {busLocations.map((bus) => (
+        console.log("Bus:", bus.currentLocation.latitude,bus.currentLocation.longitude),
+     
         <Marker
           key={bus.route}
           position={[bus.currentLocation.latitude, bus.currentLocation.longitude]}
           icon={busIcon}
         >
-          <Popup>{bus.route}</Popup>
+          <Popup>{
+            <div>
+              <h2>Route: {bus.route}</h2>
+              <p>Passengers: {bus.passengers}</p>
+              <p>Status: {bus.status}</p>
+              <p>Latitude: {bus.currentLocation.latitude}</p>
+              <p>Longitude: {bus.currentLocation.longitude}</p>
+            </div>
+            }</Popup>
         </Marker>
       ))}
 
