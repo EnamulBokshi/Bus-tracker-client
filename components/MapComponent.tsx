@@ -67,7 +67,7 @@ const MapComponent: React.FC = () => {
       },
       (err) => {
         if(err){
-        console.error(err)}
+        console.log(err)}
       },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
@@ -127,7 +127,8 @@ const MapComponent: React.FC = () => {
     <MapContainer
       center={userLocation ? [userLocation.lat, userLocation.lng] : [23.8103, 90.4125]} // Default to Dhaka
       zoom={13}
-      style={{ height: "500px", width: "100%" }}
+      style={{ height: "700px", width: "100%" }}
+      className="leaflet-container z-0 w-full"
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -145,25 +146,27 @@ const MapComponent: React.FC = () => {
       )}
 
       {/* Render Multiple Bus Locations */}
-      {busLocations.map((bus) => (
-        console.log("Bus:", bus.currentLocation.latitude,bus.currentLocation.longitude),
+      {busLocations.map((bus) => {
+        console.log("Bus:", bus.currentLocation.latitude,bus.currentLocation.longitude);
      
-        <Marker
-          key={bus.route}
-          position={[bus.currentLocation.latitude, bus.currentLocation.longitude]}
-          icon={busIcon}
-        >
-          <Popup>{
-            <div>
-              <h2>Route: {bus.route}</h2>
-              <p>Passengers: {bus.passengers}</p>
-              <p>Status: {bus.status}</p>
-              <p>Latitude: {bus.currentLocation.latitude}</p>
-              <p>Longitude: {bus.currentLocation.longitude}</p>
-            </div>
-            }</Popup>
-        </Marker>
-      ))}
+        return (
+          <Marker
+            key={bus.route}
+            position={[bus.currentLocation.latitude, bus.currentLocation.longitude]}
+            icon={busIcon}
+          >
+            <Popup>
+              <div>
+                <h2>Route: {bus.route}</h2>
+                <p>Passengers: {bus.passengers}</p>
+                <p>Status: {bus.status}</p>
+                <p>Latitude: {bus.currentLocation.latitude}</p>
+                <p>Longitude: {bus.currentLocation.longitude}</p>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
 
       {/* Search Control */}
       <SearchControl /> 

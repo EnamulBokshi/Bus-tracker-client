@@ -10,7 +10,6 @@ const MapComponent = dynamic(() => import("@/components/MapComponent"), {
 export default function Home() {
   return (
     <div>
-      <h1>Real-time Bus Tracking</h1>
       <MapComponent />
     </div>
   );
