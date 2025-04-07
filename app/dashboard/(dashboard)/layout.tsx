@@ -6,7 +6,7 @@ const SidebarLayout = ({children}:Readonly<{children:React.ReactNode}>) => {
   return (
     <SidebarProvider>
         <DashboardSidebar/>
-        <main>
+        <main className='w-full h-full bg-gray-300'>
             <SidebarTrigger />
             {children}
         </main>

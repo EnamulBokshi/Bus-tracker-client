@@ -4,11 +4,9 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-geosearch/dist/geosearch.css"; // Import GeoSearch CSS
 import L from "leaflet";
-import { database, ref, onValue } from "@/firebase/firebase";
 import socket from "@/utils/socket";
-import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
+
 import SearchControl from "./MapControl";
-import { error } from "console";
 
 // Define type for GPS location
 interface Location {
