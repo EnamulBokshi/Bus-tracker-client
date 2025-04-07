@@ -9,7 +9,7 @@ const RootLayout = ({children}:Readonly<{children:React.ReactNode}>) => {
     <SidebarProvider>
     <AppSidebar />
 
-    <main >
+    <main className='w-full h-screen'>
       <SidebarTrigger />
       {children}
 
