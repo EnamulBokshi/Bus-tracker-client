@@ -6,9 +6,12 @@ const SidebarLayout = ({children}:Readonly<{children:React.ReactNode}>) => {
   return (
     <SidebarProvider>
         <DashboardSidebar/>
-        <main className='w-full h-full bg-gray-300'>
+        <main className='w-full h-screen bg-gray-300 '>
             <SidebarTrigger />
+            <div className='px-10'>
             {children}
+
+            </div>
         </main>
     </SidebarProvider>
   )
