@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { Bot } from 'lucide-react';
 import {
@@ -10,6 +11,43 @@ import {
 } from "@/components/ui/sheet";
 
 const AiModal = () => {
+    const [question, setQuestion] = React.useState<string>('');
+    const [response, setResponse] = React.useState<string>('');
+    const [loading, setLoading] = React.useState<boolean>(false);
+    const [error, setError] = React.useState('');
+
+    const handleQuestionSubmit = async ()=>{
+        if (question.trim() === '') {
+            setError('Please enter a question.');
+            return;
+        }
+    
+        setLoading(true);
+        setError('');
+        setResponse('');
+    
+        try {
+            const res = await fetch('/api/ask-ai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ question }),
+            });
+    
+            if (!res.ok) {
+            throw new Error('Failed to fetch response');
+            }
+    
+            const data = await res.json();
+            setResponse(data.answer);
+        } catch (err) {
+            setError('An error occurred while fetching the response.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
   return (
     <Sheet>
       <SheetTrigger className="fixed top-4 right-4 z-50">
@@ -31,18 +69,28 @@ const AiModal = () => {
           <textarea
             className="w-full h-32 p-4 text-white bg-white/10 border border-white/20 rounded-xl placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all duration-300 resize-none"
             placeholder="E.g., When is the next bus from Campus 3?"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                handleQuestionSubmit();
+              }
+            }}
           ></textarea>
 
-          <button className="self-end px-5 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:scale-105 transition-transform duration-300 shadow-md ring-1 ring-white/20">
+          <button onClick={handleQuestionSubmit} className="self-end px-5 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:scale-105 transition-transform duration-300 shadow-md ring-1 ring-white/20">
             🚀 Ask
           </button>
-        </div>
 
+        </div>
+            <div className="p-4">
+            {error && <p className="text-white/90 italic animate-pulse">{'Dude! you forgot to add your questions!! 🙂🙂'}</p>}
+            </div>
         <div className="p-4 border-t border-white/10 mt-2">
           <h2 className="text-lg font-semibold text-white mb-1">🤖 AI Response:</h2>
           <div className="text-white/90 italic animate-pulse">
             {/* Response Placeholder */}
-            Typing...
+            {loading? 'Typing...': response || 'Ask me anything about DIU Bus!'}
           </div>
         </div>
       </SheetContent>
