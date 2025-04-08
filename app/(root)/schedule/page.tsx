@@ -32,9 +32,8 @@ const Schedule = async() => {
       {/* <DataTable columns={columns} data ={data} />
        */}
 
-       <Scheduler 
-        
-      />
+       <Scheduler />
+       
     </div>
   )
 }
