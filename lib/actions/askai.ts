@@ -1,7 +1,7 @@
 import { baseUrl,apiKey } from "@/exporter";
 
 
-export const askAI  = async (prompt:string):Promise<Response> =>{
+export const askAI  = async (prompt:string):Promise<any> =>{
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
