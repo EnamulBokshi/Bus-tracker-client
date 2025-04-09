@@ -9,44 +9,44 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { askAI } from '@/lib/actions/askai';
 
-const AiModal = () => {
-    const [question, setQuestion] = React.useState<string>('');
-    const [response, setResponse] = React.useState<string>('');
-    const [loading, setLoading] = React.useState<boolean>(false);
-    const [error, setError] = React.useState('');
 
-    const handleQuestionSubmit = async ()=>{
-        if (question.trim() === '') {
-            setError('Please enter a question.');
-            return;
-        }
-    
-        setLoading(true);
-        setError('');
-        setResponse('');
-    
-        try {
-            const res = await fetch('/api/ask-ai', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ question }),
-            });
-    
-            if (!res.ok) {
-            throw new Error('Failed to fetch response');
-            }
-    
-            const data = await res.json();
-            setResponse(data.answer);
-        } catch (err) {
-            setError('An error occurred while fetching the response.');
-        } finally {
-            setLoading(false);
-        }
+const AiModal =  () => {
+
+  const [question, setQuestion] = React.useState<string>('');
+  const [response, setResponse] = React.useState<Response>({} as Response);
+  const [loading, setLoading] = React.useState<boolean>(false);
+  const [error, setError] = React.useState('');
+
+
+  const handleQuestionSubmit = async () => {
+    if (question.trim() === '') {
+      setError('Please enter a question.');
+      return;
     }
+
+    setLoading(true);
+    setError('');
+    setResponse({} as Response);
+    setQuestion('');
+
+    try {
+      const response = await askAI(question);
+      console.log("AI Response:", response);
+      if (response) {
+        setResponse(response);
+        setQuestion('');
+      } else {
+        setError('No response from the AI.');
+      }
+
+    } catch (err) {
+      setError('An error occurred while fetching the response.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <Sheet>
@@ -83,14 +83,16 @@ const AiModal = () => {
           </button>
 
         </div>
-            <div className="p-4">
-            {error && <p className="text-white/90 italic animate-pulse">{'Dude! you forgot to add your questions!! 🙂🙂'}</p>}
-            </div>
+        <div className="p-4">
+          {error && <p className="text-white/90 italic animate-pulse">{'Dude! you forgot to add your questions!! 🙂🙂'}</p>}
+        </div>
         <div className="p-4 border-t border-white/10 mt-2">
           <h2 className="text-lg font-semibold text-white mb-1">🤖 AI Response:</h2>
           <div className="text-white/90 italic animate-pulse">
             {/* Response Placeholder */}
-            {loading? 'Typing...': response || 'Ask me anything about DIU Bus!'}
+            {loading ? 'Typing...' : response || 'Ask me anything about DIU Bus!'}
+            {/* {loading ? 'Typing...' : response instanceof Response ? JSON.stringify(response) : response || 'Ask me anything about DIU Bus!'} */}
+
           </div>
         </div>
       </SheetContent>
