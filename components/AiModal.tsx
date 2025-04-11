@@ -10,6 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { askAI } from '@/lib/actions/askai';
+import { askGemini } from '@/lib/actions/askai';
 import ReactMarkdown from "react-markdown";
 
 
@@ -30,7 +31,7 @@ const AiModal = () => {
     setResponse('');
 
     try {
-      const aiResponse = await askAI(question);
+      const aiResponse = await askGemini(question);
       console.log("AI Response:", aiResponse);
 
       if (aiResponse) {
