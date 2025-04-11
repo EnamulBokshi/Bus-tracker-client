@@ -3,10 +3,12 @@ dotenv.config()
 
 const baseUrl = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || 'https://openrouter.ai/api/v1/chat/completions';
 const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-console.log("Base URL:", baseUrl);
-console.log("API Key:", apiKey);
+const MCP_BASE_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
+const GeminiApiKey = process.env.GEMINI_API_KEY;
 
 export {
     baseUrl,
-    apiKey
+    apiKey,
+    MCP_BASE_URL,
+    GeminiApiKey
 }
