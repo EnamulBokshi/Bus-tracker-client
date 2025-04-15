@@ -6,6 +6,7 @@ export type Bus = {
     manager: number,
     currentLocation: {
         latitude: number,
+        
         longitude: number
     },
     passengers: number,
